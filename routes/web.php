@@ -54,3 +54,9 @@ Route::post('AreaOfShape', [App\Http\Controllers\AreaController::class, 'Area'])
 // addRooms
 Route::get('addrooms', [App\Http\Controllers\addRoomsController::class, 'index']);
 Route::post('addrooms', [App\Http\Controllers\addRoomsController::class, 'showrooms']);
+
+Route::get('123', [App\Http\Controllers\sildecontroller::class, 'getindex']);
+Route::post('123', [App\Http\Controllers\sildecontroller::class, 'getindex']);
+
+Route::get('banhang', [App\Http\Controllers\sildecontroller::class, 'getindex']);
+
