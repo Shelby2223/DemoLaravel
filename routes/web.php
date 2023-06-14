@@ -72,3 +72,17 @@ Route::get('/admin-edit-form/{id}', [App\Http\Controllers\PageController::class,
 Route::post('/admin-edit-form/{id}',[App\Http\Controllers\PageController::class, 'postAdminEdit']);
 
 Route::post('/admin-delete/{id}', [App\Http\Controllers\PageController::class, 'postAdminDelete']);
+
+
+Route::get('/register', function () {return view('page.register');});	
+Route::post('/register', [App\Http\Controllers\UserController::class, 'Register']);
+
+Route::get('/login', function () {return view('page.login');});		
+Route::post('/login', [App\Http\Controllers\UserController::class, 'Login']);
+
+Route::get('/logout', [App\Http\Controllers\UserController::class, 'logout']);
+
+Route::get('add-to-cart/{id}', [App\Http\Controllers\PageController::class, 'getAddToCart'])->name('themgiohang');											
+Route::get('del-cart/{id}', [App\Http\Controllers\PageController::class, 'getDelItemCart'])->name('xoagiohang');											
+
+

@@ -9,18 +9,19 @@ use App\Models\comments;
 use App\Models\bill_detail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
+use App\Models\Cart;
 
 
 class PageController extends Controller
 {
     public function getIndex()
-    {	
-    	$slide = Slide::all();
-    	$new_product = products::where('new', 1)->get();	
+    {
+        $slide = Slide::all();
+        $new_product = products::where('new', 1)->get();
         $sanpham_khuyenmai = products::where('promotion_price', '<>', 0)->get();
-    	return view('page.trangchu', compact('slide', 'new_product', 'sanpham_khuyenmai'));
+        return view('page.trangchu', compact('slide', 'new_product', 'sanpham_khuyenmai'));
     }
-    
+
     public function getDetail(Request $request)
     {
         $sanpham = products::where('id', $request->id)->first();
@@ -28,25 +29,26 @@ class PageController extends Controller
         $comment = comments::where('id_product', $request->id)->get();
         return view('page.details', compact('sanpham', 'splienquan', 'comment'));
     }
-    
+
     public function getIndexAdmin()
     {
         // Lấy tất cả các sản phẩm từ bảng 'products'
         $products = products::all();
-    
+
         // Trả về view 'pageadmin.admin' với dữ liệu được truyền vào
         return view('pageadmin.admin')->with(['products' => $products, 'sumSold' => count(bill_detail::all())]);
     }
-    
-    public function getAdminAdd(){
+
+    public function getAdminAdd()
+    {
         return view('pageadmin.formadd');
     }
-   								
+
     public function postAdminAdd(Request $request)
     {
         // Tạo một phiên bản mới của lớp mô hình Product
         $product = new products();
-    
+
         // Kiểm tra nếu có file inputImage được gửi lên
         if ($request->hasFile('inputImage')) {
             // Lấy thông tin về file
@@ -56,15 +58,15 @@ class PageController extends Controller
             // Di chuyển file vào thư mục 'source/image/product'
             $file->move('source/image/product', $fileName);
         }
-    
+
         $file_name = null;
-    
+
         // Kiểm tra nếu file inputImage không rỗng
         if ($request->file('inputImage') != null) {
             // Lấy tên gốc của file
             $file_name = $request->file('inputImage')->getClientOriginalName();
         }
-    
+
         // Gán giá trị từ request vào các thuộc tính của đối tượng $product
         $product->name = $request->inputName;
         $product->image = $file_name;
@@ -74,13 +76,12 @@ class PageController extends Controller
         $product->unit = $request->inputUnit;
         $product->new = $request->inputNew;
         $product->id_type = $request->inputType;
-    
+
         // Lưu đối tượng $product vào cơ sở dữ liệu
         $product->save();
 
         // Trả về kết quả từ phương thức getIndexAdmin()
         return Redirect::to('/admin');
-
     }
 
     public function getAdminEdit($id)
@@ -91,8 +92,8 @@ class PageController extends Controller
     public function postAdminEdit(Request $request)
     {
         $id = $request->editId;
-        $product= products::find($id);
-        if($request->hasFile('editImage')){
+        $product = products::find($id);
+        if ($request->hasFile('editImage')) {
             $file = $request->file('editImage');
             $fileName = $file->getClientOriginalName('eidtImage');
             $file->move('source/image/product', $fileName);
@@ -110,10 +111,11 @@ class PageController extends Controller
         $product->save();
         return Redirect::route('admin');
     }
-    
-    public function postAdminDelete($id) {
+
+    public function postAdminDelete($id)
+    {
         $product = products::find($id);
-        $product ->delete();
+        $product->delete();
 
         // Thêm thông báo cảnh báo vào session
         Session::flash('success', 'Product deleted successfully.');
@@ -121,6 +123,33 @@ class PageController extends Controller
 
         return Redirect::to('/admin');
     }
-    
-       					
+    public function getAddToCart(Request $req, $id)
+    {
+        if (Session::has('users')) {
+            if (products::find($id)) {
+                $product = products::find($id);
+                $oldCart = Session('cart') ? Session::get('cart') : null;
+                $cart = new Cart($oldCart);
+                $cart->add($product, $id);
+                $req->session()->put('cart', $cart);
+                return redirect()->back();
+            } else {
+                return '<script>alert("Không tìm thấy sản phẩm này.");window.location.assign("/");</script>';
+            }
+        } else {
+            return '<script>alert("Vui lòng đăng nhập để sử dụng chức năng này.");window.location.assign("/login");</script>';
+        }
+    }
+    public function getDelItemCart($id)
+    {
+        $oldCart = Session::has('cart') ? Session::get('cart') : null;
+        $cart = new Cart($oldCart);
+        $cart->removeItem($id);
+        if (count($cart->items) > 0) {
+            Session::put('cart', $cart);
+        } else {
+            Session::forget('cart');
+        }
+        return redirect()->back();
+    }
 }
